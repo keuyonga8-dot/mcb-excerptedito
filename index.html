@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Quote Editor v14</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Nanum+Myeongjo:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Song+Myung&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Nanum+Brush+Script&display=swap');
+
+        :root { --accent: #007aff; --sidebar-w: 280px; }
+        
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; display: flex; height: 100vh; background: #f2f2f4; font-family: 'Noto Sans KR', sans-serif; overflow: hidden; font-size: 11px; letter-spacing: -0.4px; }
+
+        input, button, textarea, select { font-family: 'Noto Sans KR', sans-serif; font-size: 11px; letter-spacing: -0.4px; }
+
+        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; }
+        .sidebar h2 { font-size: 13px; margin: 0 0 12px 0; font-weight: 900; border-bottom: 2px solid #000; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .h2-btn { font-size: 9px; font-weight: 700; padding: 4px 8px; background: #000; color: #fff; border: none; border-radius: 3px; cursor: pointer; letter-spacing: 0.3px; }
+
+        .group { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f5f5f5; }
+        .label { font-size: 9px; font-weight: 800; color: #999; text-transform: uppercase; margin-bottom: 6px; display: block; }
+
+        textarea { width: 100%; height: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: none; line-height: 1.4; }
+        .input-s { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-top: 4px; }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        .btn-s { height: 26px; padding: 0; border: 1px solid #eee; background: #fff; border-radius: 4px; cursor: pointer; font-size: 10px; color: #444; line-height: 24px; text-align: center; }
+        .btn-s.active { background: #000; color: #fff; border-color: #000; font-weight: bold; }
+
+        .bg-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 6px; }
+        .bg-dot { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid transparent; }
+        .bg-dot.active { border-color: var(--accent); transform: scale(1.1); }
+
+        input[type="range"] { width: 100%; accent-color: #000; height: 3px; cursor: pointer; margin: 8px 0; }
+        .slider-row { display: flex; align-items: center; gap: 8px; }
+        .slider-row input[type="range"] { flex: 1; }
+        .slider-val { font-size: 10px; color: #666; min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+
+        .preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #dcdce0; padding: 20px; }
+        #card { position: relative; background: #222; box-shadow: 0 15px 45px rgba(0,0,0,0.1); overflow: hidden; display: flex; 
+                 background-size: cover; background-position: center; }
+        
+        /* 세로 정렬 */
+        #card.va-top { align-items: flex-start; }
+        #card.va-center { align-items: center; }
+        #card.va-bottom { align-items: flex-end; }
+
+        .filter-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; transition: 0.3s; }
+        .f-none { background: transparent; }
+        .f-dark { background: rgba(0,0,0,0.45); }
+        .f-light { background: rgba(255,255,255,0.15); }
+
+        /* 사진 그라데이션 오버레이 */
+        .grad-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; transition: 0.3s; }
+        .g-none { background: transparent; }
+        .g-bottom { background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%); }
+        .g-top { background: linear-gradient(to top, transparent 30%, rgba(0,0,0,0.7) 100%); }
+        .g-vignette { background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%); }
+
+        .txt-box { position: relative; z-index: 4; padding: 12%; text-align: center; width: 100%; color: #fff; }
+        #v-text { font-size: 14px; line-height: 1.5; word-break: keep-all; white-space: pre-wrap; margin-bottom: 18px; font-family: 'Nanum Myeongjo'; letter-spacing: -0.5px; position: relative; }
+        #v-info { font-size: 10px; opacity: 0.55; letter-spacing: 0.3px; font-weight: 300; }
+
+        /* 거대 장식 따옴표 */
+        .big-quote-mark { position: absolute; font-family: 'Nanum Myeongjo', serif; font-size: 3.5em; line-height: 1; opacity: 0.18; pointer-events: none; z-index: -1; font-weight: 400; }
+        .bq-open { top: -0.4em; left: -0.15em; }
+        .bq-close { bottom: -0.7em; right: -0.15em; }
+
+        .save-btn { margin-top: 24px; padding: 12px 50px; background: #000; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+        .r-1-1 { width: 380px; height: 380px; }
+        .r-3-4 { width: 340px; height: 453px; }
+        .r-4-3 { width: 453px; height: 340px; }
+        .r-9-16 { width: 260px; height: 462px; }
+        .r-16-9 { width: 480px; height: 270px; }
+        .r-3-1 { width: 480px; height: 160px; }
+
+        /* ===== 모바일 반응형 ===== */
+        @media (max-width: 768px) {
+            body { 
+                flex-direction: column; 
+                height: auto; 
+                min-height: 100vh;
+                overflow: auto;
+            }
+            .sidebar { 
+                width: 100%; 
+                max-height: none;
+                border-right: none; 
+                border-bottom: 1px solid #ddd;
+                padding: 16px;
+                order: 2;
+            }
+            .preview { 
+                width: 100%;
+                padding: 20px 12px;
+                order: 1;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                background: #dcdce0;
+                border-bottom: 1px solid #ccc;
+                /* 카드가 화면보다 클 때 가로 스크롤 허용 */
+                overflow-x: auto;
+            }
+            /* 카드 사이즈는 데스크톱과 동일하게 유지 — 줄바꿈 일관성을 위해 */
+            #card { flex-shrink: 0; }
+            
+            .save-btn { margin-top: 16px; padding: 10px 36px; }
+            
+            /* 사이드바 내부 여백 살짝 키움 (터치 편의) */
+            .btn-s { height: 32px; line-height: 30px; font-size: 11px; }
+            .grid-2, .grid-3 { gap: 6px; }
+            textarea { height: 70px; font-size: 14px; padding: 10px; }
+            .input-s { padding: 10px; font-size: 14px; }
+            input[type="range"] { height: 6px; margin: 12px 0; }
+            
+            /* 모달 모바일 */
+            .modal { width: 92%; max-width: 480px; }
+        }
+
+        /* 모달 */
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-bg.show { display: flex; }
+        .modal { background: #fff; width: 480px; max-height: 80vh; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; }
+        .modal-h { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+        .modal-h h3 { margin: 0; font-size: 14px; font-weight: 900; }
+        .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #999; }
+        .col-actions { display: flex; gap: 6px; margin-bottom: 12px; }
+        .col-actions button { flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .col-save { background: #000; color: #fff; border: none; }
+        .col-clear { background: #fff; color: #c00; border: 1px solid #eee; }
+        .col-list { flex: 1; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 4px; padding: 4px; }
+        .col-empty { text-align: center; color: #999; padding: 40px 20px; font-size: 11px; }
+        .col-item { padding: 10px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .col-item:hover { background: #f9f9f9; }
+        .col-item:last-child { border-bottom: none; }
+        .col-item-text { flex: 1; min-width: 0; }
+        .col-item-quote { font-size: 11px; color: #222; line-height: 1.4; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .col-item-meta { font-size: 9px; color: #999; }
+        .col-item-del { background: none; border: none; color: #c00; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>EDITOR v14 <button class="h2-btn" onclick="openCol()">📚 컬렉션</button></h2>
+
+        <div class="group">
+            <span class="label">1. Content</span>
+            <textarea id="i-t" oninput="up()" placeholder="이곳에 대사를 입력해주세요"></textarea>
+            <input type="text" id="i-i" oninput="up()" class="input-s" placeholder="제작자 혹은 &캐릭터명">
+        </div>
+
+        <div class="group">
+            <span class="label">2. Ratio</span>
+            <div class="grid-3" style="grid-template-columns: repeat(3, 1fr);">
+                <button class="btn-s active" onclick="setR('r-1-1',this)">1:1</button>
+                <button class="btn-s" onclick="setR('r-3-4',this)">3:4</button>
+                <button class="btn-s" onclick="setR('r-4-3',this)">4:3</button>
+                <button class="btn-s" onclick="setR('r-9-16',this)">9:16</button>
+                <button class="btn-s" onclick="setR('r-16-9',this)">16:9</button>
+                <button class="btn-s" onclick="setR('r-3-1',this)">3:1</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">3. Background</span>
+            <div class="bg-grid">
+                <div class="bg-dot active" style="background:#1a1a1a" onclick="setB('c','#1a1a1a',this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(135deg, #FF9A8B, #FF6A88)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(135deg, #667eea, #764ba2)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(160deg, #0093E9, #80D0C7)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(45deg, #85FFBD, #FFFB7D)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(135deg, #2c3e50, #000000)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(62deg, #8EC5FC, #E0C3FC)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(135deg, #f6d365, #fda085)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(43deg, #4158D0, #C850C0, #FFCC70)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:linear-gradient(135deg, #8e9eab, #eef2f3)" onclick="setB('g',this.style.background,this)"></div>
+                <div class="bg-dot" style="background:#ffffff; border:1px solid #ddd" onclick="setB('c','#ffffff',this)"></div>
+                <div class="bg-dot" style="background:#f0f0f0; border:1px solid #ddd" onclick="setB('c','#f0f0f0',this)"></div>
+            </div>
+            <div class="grid-2" style="margin-top:6px">
+                <button class="btn-s" onclick="document.getElementById('f').click()">사진 업로드</button>
+                <button class="btn-s" id="re-apply" onclick="applyStoredImg()" style="display:none; color:var(--accent); font-weight:bold;">사진 다시적용</button>
+            </div>
+            <input type="file" id="f" hidden accept="image/*" onchange="uImg(this)">
+        </div>
+
+        <div class="group">
+            <span class="label">4. Filter Overlay</span>
+            <div class="grid-3">
+                <button class="btn-s active" onclick="setF('f-none',this)">기본</button>
+                <button class="btn-s" onclick="setF('f-dark',this)">어둡게</button>
+                <button class="btn-s" onclick="setF('f-light',this)">밝게</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">5. Photo Gradient (사진용)</span>
+            <div class="grid-2">
+                <button class="btn-s active" onclick="setG('g-none',this)">없음</button>
+                <button class="btn-s" onclick="setG('g-bottom',this)">하단 어둡게</button>
+                <button class="btn-s" onclick="setG('g-top',this)">상단 어둡게</button>
+                <button class="btn-s" onclick="setG('g-vignette',this)">비네팅</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">6. Quote Marks (따옴표)</span>
+            <div class="grid-3">
+                <button class="btn-s active" onclick="setQ('none',this)">없음</button>
+                <button class="btn-s" onclick="setQ('inline',this)">"인라인"</button>
+                <button class="btn-s" onclick="setQ('big',this)">❝장식❞</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">7. Text Size</span>
+            <div class="slider-row">
+                <input type="range" min="14" max="80" value="14" id="sz-range" oninput="setSz(this.value)">
+                <span class="slider-val" id="sz-val">14</span>
+            </div>
+            <span class="label" style="margin-top:4px">Line Height (줄 간격)</span>
+            <div class="slider-row">
+                <input type="range" min="1.2" max="2.2" step="0.05" value="1.5" id="lh-range" oninput="setLh(this.value)">
+                <span class="slider-val" id="lh-val">1.50</span>
+            </div>
+            <div class="grid-2" style="margin-top:6px">
+                <button class="btn-s" onclick="setCl('#fff')">흰색 글자</button>
+                <button class="btn-s" onclick="setCl('#000')">검정 글자</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">8. Typography</span>
+            <div class="grid-2">
+                <button class="btn-s" onclick="setFt('Nanum Myeongjo', this)">나눔명조</button>
+                <button class="btn-s" onclick="setFt('Gowun Batang', this)">고운바탕</button>
+                <button class="btn-s" onclick="setFt('Noto Sans KR', this)">노토산스</button>
+                <button class="btn-s active" onclick="setFt('IBM Plex Sans KR', this)">IBM Plex</button>
+                <button class="btn-s" onclick="setFt('Nanum Gothic', this)">나눔고딕</button>
+                <button class="btn-s" onclick="setFt('Song Myung', this)">송명체</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">9. Alignment</span>
+            <span class="label" style="font-size:8px; color:#bbb">가로</span>
+            <div class="grid-3">
+                <button class="btn-s" onclick="setAl('left', this)">좌측</button>
+                <button class="btn-s active" onclick="setAl('center', this)">중앙</button>
+                <button class="btn-s" onclick="setAl('right', this)">우측</button>
+            </div>
+            <span class="label" style="font-size:8px; color:#bbb; margin-top:6px">세로</span>
+            <div class="grid-3">
+                <button class="btn-s" onclick="setVa('va-top', this)">상단</button>
+                <button class="btn-s active" onclick="setVa('va-center', this)">중앙</button>
+                <button class="btn-s" onclick="setVa('va-bottom', this)">하단</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview">
+        <div id="card" class="r-1-1 va-center">
+            <div id="g-layer" class="grad-layer g-none"></div>
+            <div id="f-layer" class="filter-layer f-none"></div>
+            <div class="txt-box" id="total-box">
+                <div id="v-text" style="opacity:0.4">이곳에 대사를 입력해주세요</div>
+                <div id="v-info" style="display:none"></div>
+            </div>
+        </div>
+        <button class="save-btn" onclick="save()">SAVE PNG</button>
+    </div>
+
+    <!-- 컬렉션 모달 -->
+    <div class="modal-bg" id="modal-col">
+        <div class="modal">
+            <div class="modal-h">
+                <h3>📚 발췌 컬렉션</h3>
+                <button class="modal-close" onclick="closeCol()">×</button>
+            </div>
+            <div class="col-actions">
+                <button class="col-save" onclick="saveCol()">＋ 현재 발췌 저장</button>
+                <button class="col-clear" onclick="clearCol()">전체 삭제</button>
+            </div>
+            <div class="col-list" id="col-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const card = document.getElementById('card'), vT = document.getElementById('v-text'), vI = document.getElementById('v-info'), fL = document.getElementById('f-layer'), gL = document.getElementById('g-layer'), tB = document.getElementById('total-box');
+        let lastImgData = ""; 
+        let quoteMode = 'none'; // none / inline / big
+        const COL_KEY = 'quote_collection_v14';
+
+        function up() { 
+            const txt = document.getElementById('i-t').value;
+            const info = document.getElementById('i-i').value;
+            
+            // 본문
+            if (txt.trim() === '') {
+                vT.style.opacity = '0.4';
+                vT.innerText = '이곳에 대사를 입력해주세요';
+            } else {
+                vT.style.opacity = '';
+                applyQuoteMode(txt);
+            }
+            
+            // 저자 — 빈 값이면 아예 숨김
+            if (info.trim() === '') {
+                vI.style.display = 'none';
+            } else {
+                vI.style.display = '';
+                vI.style.opacity = '';
+                vI.innerText = info; 
+            }
+        }
+
+        function applyQuoteMode(txt) {
+            // 기존 따옴표 정리 (앞뒤 ", ", ", ❝, ❞ 제거)
+            let clean = txt.replace(/^["""❝]+/, '').replace(/["""❞]+$/, '').trim();
+            
+            if (quoteMode === 'inline') {
+                vT.innerHTML = `"${escapeHtml(clean)}"`;
+            } else if (quoteMode === 'big') {
+                vT.innerHTML = `<span class="big-quote-mark bq-open">❝</span>${escapeHtml(clean)}<span class="big-quote-mark bq-close">❞</span>`;
+            } else {
+                vT.innerText = txt; // 원본 그대로
+            }
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function setR(r,b) { 
+            const va = card.className.match(/va-\w+/)?.[0] || 'va-center';
+            card.className = r + ' ' + va; 
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); 
+            b.classList.add('active'); 
+        }
+        function setSz(v) { vT.style.fontSize = v+'px'; document.getElementById('sz-val').innerText = v; }
+        function setLh(v) { vT.style.lineHeight = v; document.getElementById('lh-val').innerText = parseFloat(v).toFixed(2); }
+        
+        function setB(t,v,e) { 
+            card.style.backgroundImage = (t === 'g') ? v : 'none';
+            if(t === 'c') card.style.backgroundColor = v;
+            document.querySelectorAll('.bg-dot').forEach(d=>d.classList.remove('active')); 
+            e.classList.add('active'); 
+        }
+
+        function uImg(i) { 
+            if(i.files && i.files[0]) { 
+                const r = new FileReader(); 
+                r.onload = function(e) { 
+                    lastImgData = e.target.result;
+                    applyStoredImg();
+                    document.getElementById('re-apply').style.display = 'inline-block';
+                }; 
+                r.readAsDataURL(i.files[0]); 
+            } 
+        }
+
+        function applyStoredImg() {
+            if(lastImgData) {
+                card.style.backgroundImage = `url(${lastImgData})`;
+                document.querySelectorAll('.bg-dot').forEach(d=>d.classList.remove('active'));
+            }
+        }
+
+        function setF(f,b) { fL.className='filter-layer '+f; b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); b.classList.add('active'); }
+        function setG(g,b) { gL.className='grad-layer '+g; b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); b.classList.add('active'); }
+        function setQ(q,b) { 
+            quoteMode = q; 
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); 
+            b.classList.add('active'); 
+            applyQuoteMode(document.getElementById('i-t').value);
+        }
+        function setCl(c) { vT.style.color = vI.style.color = c; }
+        function setAl(a, b) { tB.style.textAlign = a; b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); b.classList.add('active'); }
+        function setVa(va, b) {
+            card.classList.remove('va-top', 'va-center', 'va-bottom');
+            card.classList.add(va);
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+            b.classList.add('active');
+        }
+        function setFt(f, b) { vT.style.fontFamily=f; b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); b.classList.add('active'); }
+        
+        // 파일명 자동 생성
+        function genFilename() {
+            const txt = document.getElementById('i-t').value
+                .replace(/["""❝❞]/g, '')
+                .replace(/[\s\n]+/g, '_')
+                .replace(/[^\w가-힣_]/g, '')
+                .slice(0, 20);
+            const now = new Date();
+            const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+            return `${txt || 'quote'}_${ts}.png`;
+        }
+
+        function save() { 
+            html2canvas(card, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+            }).then(cvs => { 
+                const a = document.createElement('a'); 
+                a.download = genFilename(); 
+                a.href = cvs.toDataURL('image/png'); 
+                a.click(); 
+            }); 
+        }
+
+        // ============ 컬렉션 ============
+        function openCol() { document.getElementById('modal-col').classList.add('show'); renderCol(); }
+        function closeCol() { document.getElementById('modal-col').classList.remove('show'); }
+
+        function getCol() {
+            try { return JSON.parse(localStorage.getItem(COL_KEY) || '[]'); }
+            catch(e) { return []; }
+        }
+        function setCol(arr) {
+            localStorage.setItem(COL_KEY, JSON.stringify(arr));
+        }
+
+        function saveCol() {
+            const arr = getCol();
+            const item = {
+                id: Date.now(),
+                text: document.getElementById('i-t').value,
+                info: document.getElementById('i-i').value,
+                date: new Date().toISOString().slice(0,10)
+            };
+            arr.unshift(item);
+            setCol(arr);
+            renderCol();
+        }
+
+        function loadColItem(id) {
+            const arr = getCol();
+            const item = arr.find(x => x.id === id);
+            if (!item) return;
+            document.getElementById('i-t').value = item.text;
+            document.getElementById('i-i').value = item.info;
+            up();
+            closeCol();
+        }
+
+        function delColItem(e, id) {
+            e.stopPropagation();
+            const arr = getCol().filter(x => x.id !== id);
+            setCol(arr);
+            renderCol();
+        }
+
+        function clearCol() {
+            if (!confirm('컬렉션 전체를 삭제할까요?')) return;
+            setCol([]);
+            renderCol();
+        }
+
+        function renderCol() {
+            const list = document.getElementById('col-list');
+            const arr = getCol();
+            if (arr.length === 0) {
+                list.innerHTML = '<div class="col-empty">저장된 발췌가 없습니다.<br>현재 발췌를 저장하면 여기에 표시됩니다.</div>';
+                return;
+            }
+            list.innerHTML = arr.map(item => `
+                <div class="col-item" onclick="loadColItem(${item.id})">
+                    <div class="col-item-text">
+                        <div class="col-item-quote">${escapeHtml(item.text)}</div>
+                        <div class="col-item-meta">${escapeHtml(item.info)} · ${item.date}</div>
+                    </div>
+                    <button class="col-item-del" onclick="delColItem(event, ${item.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        // 모달 배경 클릭으로 닫기
+        document.getElementById('modal-col').addEventListener('click', function(e) {
+            if (e.target === this) closeCol();
+        });
+    </script>
+</body>
+</html>
