@@ -145,9 +145,18 @@
             #card { 
                 flex-shrink: 0; 
                 transform-origin: center center;
-                /* transform scale은 JS에서 동적으로 계산해 적용 */
             }
-            .save-btn { margin-top: 8px; padding: 8px 28px; font-size: 12px; flex-shrink: 0; }
+            /* 모바일에서 SAVE 버튼은 우측 상단 fixed — 항상 보임 */
+            .save-btn { 
+                position: fixed;
+                top: 8px;
+                right: 8px;
+                z-index: 20;
+                margin: 0;
+                padding: 8px 18px; 
+                font-size: 11px; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
             
             /* 사이드바 내부 여백 살짝 키움 (터치 편의) */
             .btn-s { height: 32px; line-height: 30px; font-size: 11px; }
@@ -841,13 +850,11 @@
             card.style.transform = '';
             card.style.margin = '';
             
-            // SAVE 버튼 높이 + padding을 빼서 카드가 쓸 수 있는 실제 공간 계산
-            const saveBtn = preview.querySelector('.save-btn');
-            const saveBtnHeight = saveBtn ? saveBtn.offsetHeight + 16 : 50;
-            const previewPadding = 24;
+            // SAVE 버튼이 fixed로 떠있어서 preview 전체 공간을 카드가 사용 가능
+            const previewPadding = 24; // 12px * 2
             
             const availW = preview.clientWidth - previewPadding;
-            const availH = preview.clientHeight - previewPadding - saveBtnHeight;
+            const availH = preview.clientHeight - previewPadding;
             
             const cardW = card.offsetWidth;
             const cardH = card.offsetHeight;
