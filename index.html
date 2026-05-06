@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Quote Editor v15</title>
+    <title>Quote Editor v14</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Nanum+Myeongjo:wght@400;700&family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Song+Myung&family=IBM+Plex+Sans+KR:wght@300;400;600&family=Nanum+Brush+Script&display=swap');
@@ -130,20 +130,24 @@
             }
             .preview { 
                 width: 100%;
-                padding: 20px 12px;
+                padding: 12px;
                 order: 1;
                 position: sticky;
                 top: 0;
                 z-index: 10;
                 background: #dcdce0;
                 border-bottom: 1px solid #ccc;
-                /* 카드가 화면보다 클 때 가로 스크롤 허용 */
-                overflow-x: auto;
+                /* 화면의 절반 이하로 제한 — 에디터 접근성 우선 */
+                max-height: 50vh;
+                /* 카드가 화면보다 클 때 가로/세로 스크롤 허용 */
+                overflow: auto;
+                /* preview 내부에서 카드를 위쪽 정렬 (가운데 정렬하면 작은 카드가 너무 떠보임) */
+                justify-content: flex-start;
             }
-            /* 카드 사이즈는 데스크톱과 동일하게 유지 — 줄바꿈 일관성을 위해 */
+            /* 카드가 화면보다 클 때 가로 스크롤 허용 */
             #card { flex-shrink: 0; }
-            
-            .save-btn { margin-top: 16px; padding: 10px 36px; }
+            /* 모바일에서 SAVE 버튼은 카드 옆에 컴팩트하게 */
+            .save-btn { margin-top: 12px; padding: 8px 28px; font-size: 12px; flex-shrink: 0; }
             
             /* 사이드바 내부 여백 살짝 키움 (터치 편의) */
             .btn-s { height: 32px; line-height: 30px; font-size: 11px; }
@@ -181,7 +185,7 @@
 <body>
 
     <div class="sidebar">
-        <h2>EDITOR v14 <button class="h2-btn" onclick="openCol()">📚 컬렉션</button></h2>
+        <h2>EDITOR v15 <button class="h2-btn" onclick="openCol()">📚 컬렉션</button></h2>
 
         <div class="group">
             <span class="label">1. Content</span>
@@ -287,6 +291,11 @@
                 <button class="btn-s" onclick="setEm('bold',this)">굵게</button>
                 <button class="btn-s" onclick="setEm('both',this)">색상+굵게</button>
             </div>
+            <span class="label" style="font-size:8px; color:#bbb; margin-top:6px">감지 범위</span>
+            <div class="grid-2">
+                <button class="btn-s active" onclick="setEmScope('explicit',this)">명시적만 ("...")</button>
+                <button class="btn-s" onclick="setEmScope('both',this)">명시 + 암묵적</button>
+            </div>
             <span class="label" style="font-size:8px; color:#bbb; margin-top:6px">색상 선택</span>
             <div class="color-grid">
                 <div class="color-dot active" style="background:#f5d97a" onclick="setEmColor('#f5d97a','#8a6d2c',this)" title="베이지"></div>
@@ -380,6 +389,7 @@
         const card = document.getElementById('card'), vT = document.getElementById('v-text'), vI = document.getElementById('v-info'), fL = document.getElementById('f-layer'), gL = document.getElementById('g-layer'), tB = document.getElementById('total-box');
         let lastImgData = ""; 
         let quoteMode = 'none'; // none / inline / big
+        let emScope = 'explicit'; // explicit / both — 대사 감지 범위
         const COL_KEY = 'quote_collection_v14';
 
         function up() { 
@@ -437,7 +447,33 @@
             //    스마트 따옴표 "..."
             s = s.replace(/\u201C([^\u201C\u201D]*?)\u201D/g, '<span class="quoted">\u201C$1\u201D</span>');
             
+            // 3) 암묵적 대사 감지 (emScope === 'both'일 때만)
+            //    빈 줄로 분리되고, 별표도 따옴표 span도 포함하지 않은 단독 줄을 대사로 간주
+            if (emScope === 'both') {
+                const lines = s.split('\n');
+                const processed = lines.map(line => {
+                    const trimmed = line.trim();
+                    // 빈 줄 그대로
+                    if (trimmed === '') return line;
+                    // 이미 span 태그가 줄 전체를 감싸거나 일부 포함하면 건드리지 않음
+                    if (trimmed.includes('<span')) return line;
+                    // 별표나 따옴표 잔재가 있어도 건드리지 않음 (불완전 매칭 케이스)
+                    if (trimmed.includes('*') || trimmed.includes('&quot;') || trimmed.includes('\u201C') || trimmed.includes('\u201D')) return line;
+                    // 그 외 일반 텍스트 → 대사로 인식
+                    return `<span class="quoted">${line}</span>`;
+                });
+                s = processed.join('\n');
+            }
+            
             return s;
+        }
+
+        function setEmScope(scope, b) {
+            emScope = scope;
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+            b.classList.add('active');
+            // 텍스트 다시 렌더링
+            applyQuoteMode(document.getElementById('i-t').value);
         }
 
         function setEm(mode, b) {
