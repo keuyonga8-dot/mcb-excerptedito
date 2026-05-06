@@ -137,21 +137,16 @@
                 z-index: 10;
                 background: #dcdce0;
                 border-bottom: 1px solid #ccc;
-                /* 화면의 절반 이하로 제한 — 에디터 접근성 우선 */
                 max-height: 50vh;
                 overflow: hidden;
                 justify-content: center;
             }
-            /* 카드 자체는 데스크톱 사이즈 그대로 유지 — 줄바꿈 일관성 */
+            /* 카드 자체는 데스크톱 사이즈 그대로 — 줄바꿈 일관성 */
             #card { 
                 flex-shrink: 0; 
-                /* 시각적으로만 축소 — 실제 너비/높이는 그대로 */
-                transform: scale(0.62);
                 transform-origin: center center;
+                /* transform scale은 JS에서 동적으로 계산해 적용 */
             }
-            /* 카드가 scale로 줄어들면 주변에 빈 공간이 생겨서 음수 마진으로 보정 */
-            .preview > #card { margin: -8% 0; }
-            /* 모바일에서 SAVE 버튼은 컴팩트하게 */
             .save-btn { margin-top: 8px; padding: 8px 28px; font-size: 12px; flex-shrink: 0; }
             
             /* 사이드바 내부 여백 살짝 키움 (터치 편의) */
@@ -527,6 +522,7 @@
             card.className = [r, ...preserveClasses].join(' ');
             b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); 
             b.classList.add('active'); 
+            fitCardToPreview();
         }
         function setSize(s, b) {
             if (s === 'l') {
@@ -536,6 +532,7 @@
             }
             b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
             b.classList.add('active');
+            fitCardToPreview();
         }
         function setSz(v) { vT.style.fontSize = v+'px'; document.getElementById('sz-val').innerText = v; }
         function setLh(v) { vT.style.lineHeight = v; document.getElementById('lh-val').innerText = parseFloat(v).toFixed(2); }
@@ -612,8 +609,13 @@
                 saveScale = isLarge ? 2 : 2.5;
             }
 
+            // 모바일에서 적용된 transform/margin을 임시 제거 (캡처는 원본 사이즈로)
+            const savedTransform = card.style.transform;
+            const savedMargin = card.style.margin;
+            card.style.transform = '';
+            card.style.margin = '';
+
             // ⚠️ html2canvas가 CSS 변수(--em-color 등)를 못 읽는 이슈 대비:
-            // 캡처 직전에 .quoted, .starred span에 인라인 스타일을 강제 적용
             const emColor = getComputedStyle(document.documentElement).getPropertyValue('--em-color').trim();
             const emColorDark = getComputedStyle(document.documentElement).getPropertyValue('--em-color-dark').trim();
             const stColor = getComputedStyle(document.documentElement).getPropertyValue('--st-color').trim();
@@ -623,7 +625,6 @@
             const quotedSpans = card.querySelectorAll('.quoted');
             const starredSpans = card.querySelectorAll('.starred');
             
-            // .quoted (큰따옴표) 강조 색상 인라인화
             quotedSpans.forEach(el => {
                 if (card.classList.contains('em-color') || card.classList.contains('em-both')) {
                     el.style.color = isDarkText ? emColorDark : emColor;
@@ -632,7 +633,6 @@
                     el.style.fontWeight = '700';
                 }
             });
-            // .starred (별표) 강조 색상/스타일 인라인화
             starredSpans.forEach(el => {
                 if (card.classList.contains('st-color') || card.classList.contains('st-italic-color')) {
                     el.style.color = isDarkText ? stColorDark : stColor;
@@ -645,24 +645,28 @@
                 }
             });
             
+            const restore = () => {
+                quotedSpans.forEach(el => { el.style.color=''; el.style.fontWeight=''; });
+                starredSpans.forEach(el => { el.style.color=''; el.style.fontStyle=''; el.style.opacity=''; });
+                // transform/margin 복원
+                card.style.transform = savedTransform;
+                card.style.margin = savedMargin;
+                fitCardToPreview();
+            };
+            
             html2canvas(card, {
                 scale: saveScale,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: null,
             }).then(cvs => { 
-                // 캡처 끝나면 인라인 스타일 제거 (CSS 변수 기반으로 다시 작동하도록)
-                quotedSpans.forEach(el => { el.style.color=''; el.style.fontWeight=''; });
-                starredSpans.forEach(el => { el.style.color=''; el.style.fontStyle=''; el.style.opacity=''; });
-                
+                restore();
                 const a = document.createElement('a'); 
                 a.download = genFilename(); 
                 a.href = cvs.toDataURL('image/png'); 
                 a.click(); 
             }).catch(err => {
-                // 에러 시에도 인라인 스타일 정리
-                quotedSpans.forEach(el => { el.style.color=''; el.style.fontWeight=''; });
-                starredSpans.forEach(el => { el.style.color=''; el.style.fontStyle=''; el.style.opacity=''; });
+                restore();
                 console.error('Save failed:', err);
             });
         }
@@ -819,6 +823,53 @@
         // 모달 배경 클릭으로 닫기
         document.getElementById('modal-col').addEventListener('click', function(e) {
             if (e.target === this) closeCol();
+        });
+
+        // ============ 모바일 미리보기 자동 fit ============
+        function fitCardToPreview() {
+            // 데스크톱(768px 초과)에서는 transform 제거
+            if (window.innerWidth > 768) {
+                card.style.transform = '';
+                card.style.margin = '';
+                return;
+            }
+            
+            const preview = document.querySelector('.preview');
+            if (!preview) return;
+            
+            // 일단 transform 초기화해서 카드의 실제 사이즈 측정
+            card.style.transform = '';
+            card.style.margin = '';
+            
+            // SAVE 버튼 높이 + padding을 빼서 카드가 쓸 수 있는 실제 공간 계산
+            const saveBtn = preview.querySelector('.save-btn');
+            const saveBtnHeight = saveBtn ? saveBtn.offsetHeight + 16 : 50;
+            const previewPadding = 24;
+            
+            const availW = preview.clientWidth - previewPadding;
+            const availH = preview.clientHeight - previewPadding - saveBtnHeight;
+            
+            const cardW = card.offsetWidth;
+            const cardH = card.offsetHeight;
+            
+            if (cardW === 0 || cardH === 0) return;
+            
+            // 가로/세로 둘 다 들어가는 scale 중 작은 값 채택
+            const scaleW = availW / cardW;
+            const scaleH = availH / cardH;
+            const scale = Math.min(scaleW, scaleH, 1);
+            
+            if (scale < 1) {
+                card.style.transform = `scale(${scale})`;
+                const marginX = -(cardW * (1 - scale)) / 2;
+                const marginY = -(cardH * (1 - scale)) / 2;
+                card.style.margin = `${marginY}px ${marginX}px`;
+            }
+        }
+
+        window.addEventListener('resize', fitCardToPreview);
+        window.addEventListener('load', () => {
+            setTimeout(fitCardToPreview, 100);
         });
     </script>
 </body>
