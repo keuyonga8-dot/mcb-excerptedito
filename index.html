@@ -139,15 +139,20 @@
                 border-bottom: 1px solid #ccc;
                 /* 화면의 절반 이하로 제한 — 에디터 접근성 우선 */
                 max-height: 50vh;
-                /* 카드가 화면보다 클 때 가로/세로 스크롤 허용 */
-                overflow: auto;
-                /* preview 내부에서 카드를 위쪽 정렬 (가운데 정렬하면 작은 카드가 너무 떠보임) */
-                justify-content: flex-start;
+                overflow: hidden;
+                justify-content: center;
             }
-            /* 카드가 화면보다 클 때 가로 스크롤 허용 */
-            #card { flex-shrink: 0; }
-            /* 모바일에서 SAVE 버튼은 카드 옆에 컴팩트하게 */
-            .save-btn { margin-top: 12px; padding: 8px 28px; font-size: 12px; flex-shrink: 0; }
+            /* 카드 자체는 데스크톱 사이즈 그대로 유지 — 줄바꿈 일관성 */
+            #card { 
+                flex-shrink: 0; 
+                /* 시각적으로만 축소 — 실제 너비/높이는 그대로 */
+                transform: scale(0.62);
+                transform-origin: center center;
+            }
+            /* 카드가 scale로 줄어들면 주변에 빈 공간이 생겨서 음수 마진으로 보정 */
+            .preview > #card { margin: -8% 0; }
+            /* 모바일에서 SAVE 버튼은 컴팩트하게 */
+            .save-btn { margin-top: 8px; padding: 8px 28px; font-size: 12px; flex-shrink: 0; }
             
             /* 사이드바 내부 여백 살짝 키움 (터치 편의) */
             .btn-s { height: 32px; line-height: 30px; font-size: 11px; }
