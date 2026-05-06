@@ -15,7 +15,7 @@
 
         input, button, textarea, select { font-family: 'Noto Sans KR', sans-serif; font-size: 11px; letter-spacing: -0.4px; }
 
-        .sidebar { width: var(--sidebar-w); background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; }
+        .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; scrollbar-gutter: stable; }
         .sidebar h2 { font-size: 13px; margin: 0 0 12px 0; font-weight: 900; border-bottom: 2px solid #000; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
         .h2-btn { font-size: 9px; font-weight: 700; padding: 4px 8px; background: #000; color: #fff; border: none; border-radius: 3px; cursor: pointer; letter-spacing: 0.3px; }
 
@@ -39,8 +39,8 @@
         .slider-row input[type="range"] { flex: 1; }
         .slider-val { font-size: 10px; color: #666; min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
 
-        .preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #dcdce0; padding: 20px; }
-        #card { position: relative; background: #222; box-shadow: 0 15px 45px rgba(0,0,0,0.1); overflow: hidden; display: flex; 
+        .preview { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #dcdce0; padding: 20px; overflow: auto; }
+        #card { position: relative; flex-shrink: 0; background: #222; box-shadow: 0 15px 45px rgba(0,0,0,0.1); overflow: hidden; display: flex; 
                  background-size: cover; background-position: center; }
         
         /* 세로 정렬 */
@@ -51,6 +51,7 @@
         .filter-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; transition: 0.3s; }
         .f-none { background: transparent; }
         .f-dark { background: rgba(0,0,0,0.45); }
+        .f-darker { background: rgba(0,0,0,0.65); }
         .f-light { background: rgba(255,255,255,0.15); }
 
         /* 사진 그라데이션 오버레이 */
@@ -61,7 +62,7 @@
         .g-vignette { background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%); }
 
         .txt-box { position: relative; z-index: 4; padding: 12%; text-align: center; width: 100%; color: #fff; }
-        #v-text { font-size: 14px; line-height: 1.5; word-break: keep-all; white-space: pre-wrap; margin-bottom: 18px; font-family: 'Nanum Myeongjo'; letter-spacing: -0.5px; position: relative; }
+        #v-text { font-size: 14px; line-height: 1.5; word-break: keep-all; white-space: pre-wrap; margin-bottom: 18px; font-family: 'Noto Sans KR'; letter-spacing: -0.5px; position: relative; }
         #v-info { font-size: 10px; opacity: 0.55; letter-spacing: 0.3px; font-weight: 300; }
 
         /* 거대 장식 따옴표 */
@@ -69,14 +70,47 @@
         .bq-open { top: -0.4em; left: -0.15em; }
         .bq-close { bottom: -0.7em; right: -0.15em; }
 
+        /* 큰따옴표 자동 강조 — .quoted 클래스가 적용된 span */
+        :root { --em-color: #f5d97a; --em-color-dark: #8a6d2c; --st-color: #c0c0c0; --st-color-dark: #666666; }
+        .quoted { /* 기본은 아무 스타일 없음 */ }
+        .em-color .quoted { color: var(--em-color); }
+        .em-bold .quoted { font-weight: 700; }
+        .em-both .quoted { color: var(--em-color); font-weight: 700; }
+        .text-dark.em-color .quoted, .text-dark.em-both .quoted { color: var(--em-color-dark); }
+
+        /* 별표 자동 강조 — .starred 클래스가 적용된 span (별표 자체는 정규식에서 이미 제거됨) */
+        .starred { /* 기본은 아무 스타일 없음 */ }
+        .st-italic .starred { font-style: italic; }
+        .st-color .starred { color: var(--st-color); }
+        .st-italic-color .starred { font-style: italic; color: var(--st-color); }
+        .st-dim .starred { opacity: 0.7; font-style: italic; }
+        .text-dark.st-color .starred, .text-dark.st-italic-color .starred { color: var(--st-color-dark); }
+        .starred-strong { font-weight: 700; }
+
+        /* 색상 팔레트 도트 (강조용) */
+        .color-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 4px; }
+        .color-dot { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #ddd; }
+        .color-dot.active { border: 2px solid var(--accent); transform: scale(1.1); }
+
         .save-btn { margin-top: 24px; padding: 12px 50px; background: #000; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
+        /* ===== Small (기본) ===== */
         .r-1-1 { width: 380px; height: 380px; }
         .r-3-4 { width: 340px; height: 453px; }
         .r-4-3 { width: 453px; height: 340px; }
         .r-9-16 { width: 260px; height: 462px; }
         .r-16-9 { width: 480px; height: 270px; }
-        .r-3-1 { width: 480px; height: 160px; }
+        .r-3-1 { width: 600px; height: 200px; }
+        .r-4-5 { width: 360px; height: 450px; }
+
+        /* ===== Large (확대 버전) ===== */
+        .size-l.r-1-1 { width: 560px; height: 560px; }
+        .size-l.r-3-4 { width: 510px; height: 680px; }
+        .size-l.r-4-3 { width: 680px; height: 510px; }
+        .size-l.r-9-16 { width: 380px; height: 676px; }
+        .size-l.r-16-9 { width: 720px; height: 405px; }
+        .size-l.r-3-1 { width: 750px; height: 250px; }
+        .size-l.r-4-5 { width: 540px; height: 675px; }
 
         /* ===== 모바일 반응형 ===== */
         @media (max-width: 768px) {
@@ -157,13 +191,19 @@
 
         <div class="group">
             <span class="label">2. Ratio</span>
-            <div class="grid-3" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="grid-3" style="grid-template-columns: repeat(4, 1fr);">
                 <button class="btn-s active" onclick="setR('r-1-1',this)">1:1</button>
                 <button class="btn-s" onclick="setR('r-3-4',this)">3:4</button>
                 <button class="btn-s" onclick="setR('r-4-3',this)">4:3</button>
+                <button class="btn-s" onclick="setR('r-4-5',this)">4:5</button>
                 <button class="btn-s" onclick="setR('r-9-16',this)">9:16</button>
                 <button class="btn-s" onclick="setR('r-16-9',this)">16:9</button>
                 <button class="btn-s" onclick="setR('r-3-1',this)">3:1</button>
+            </div>
+            <span class="label" style="font-size:8px; color:#bbb; margin-top:8px">캔버스 크기</span>
+            <div class="grid-2">
+                <button class="btn-s active" id="size-s-btn" onclick="setSize('s',this)">S (기본)</button>
+                <button class="btn-s" id="size-l-btn" onclick="setSize('l',this)">L (대형)</button>
             </div>
         </div>
 
@@ -171,6 +211,9 @@
             <span class="label">3. Background</span>
             <div class="bg-grid">
                 <div class="bg-dot active" style="background:#1a1a1a" onclick="setB('c','#1a1a1a',this)"></div>
+                <div class="bg-dot" style="background:#000000" onclick="setB('c','#000000',this)" title="진검정"></div>
+                <div class="bg-dot" style="background:#0f1929" onclick="setB('c','#0f1929',this)" title="네이비"></div>
+                <div class="bg-dot" style="background:#2b0f14" onclick="setB('c','#2b0f14',this)" title="와인"></div>
                 <div class="bg-dot" style="background:linear-gradient(135deg, #FF9A8B, #FF6A88)" onclick="setB('g',this.style.background,this)"></div>
                 <div class="bg-dot" style="background:linear-gradient(135deg, #667eea, #764ba2)" onclick="setB('g',this.style.background,this)"></div>
                 <div class="bg-dot" style="background:linear-gradient(160deg, #0093E9, #80D0C7)" onclick="setB('g',this.style.background,this)"></div>
@@ -191,37 +234,9 @@
         </div>
 
         <div class="group">
-            <span class="label">4. Filter Overlay</span>
-            <div class="grid-3">
-                <button class="btn-s active" onclick="setF('f-none',this)">기본</button>
-                <button class="btn-s" onclick="setF('f-dark',this)">어둡게</button>
-                <button class="btn-s" onclick="setF('f-light',this)">밝게</button>
-            </div>
-        </div>
-
-        <div class="group">
-            <span class="label">5. Photo Gradient (사진용)</span>
-            <div class="grid-2">
-                <button class="btn-s active" onclick="setG('g-none',this)">없음</button>
-                <button class="btn-s" onclick="setG('g-bottom',this)">하단 어둡게</button>
-                <button class="btn-s" onclick="setG('g-top',this)">상단 어둡게</button>
-                <button class="btn-s" onclick="setG('g-vignette',this)">비네팅</button>
-            </div>
-        </div>
-
-        <div class="group">
-            <span class="label">6. Quote Marks (따옴표)</span>
-            <div class="grid-3">
-                <button class="btn-s active" onclick="setQ('none',this)">없음</button>
-                <button class="btn-s" onclick="setQ('inline',this)">"인라인"</button>
-                <button class="btn-s" onclick="setQ('big',this)">❝장식❞</button>
-            </div>
-        </div>
-
-        <div class="group">
-            <span class="label">7. Text Size</span>
+            <span class="label">4. Text Size</span>
             <div class="slider-row">
-                <input type="range" min="14" max="80" value="14" id="sz-range" oninput="setSz(this.value)">
+                <input type="range" min="10" max="80" value="14" id="sz-range" oninput="setSz(this.value)">
                 <span class="slider-val" id="sz-val">14</span>
             </div>
             <span class="label" style="margin-top:4px">Line Height (줄 간격)</span>
@@ -236,12 +251,82 @@
         </div>
 
         <div class="group">
+            <span class="label">5. Filter Overlay</span>
+            <div class="grid-2" style="grid-template-columns: repeat(4, 1fr);">
+                <button class="btn-s active" onclick="setF('f-none',this)">기본</button>
+                <button class="btn-s" onclick="setF('f-dark',this)">어둡게</button>
+                <button class="btn-s" onclick="setF('f-darker',this)">더어둡게</button>
+                <button class="btn-s" onclick="setF('f-light',this)">밝게</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">6. Photo Gradient (사진용)</span>
+            <div class="grid-2">
+                <button class="btn-s active" onclick="setG('g-none',this)">없음</button>
+                <button class="btn-s" onclick="setG('g-bottom',this)">하단 어둡게</button>
+                <button class="btn-s" onclick="setG('g-top',this)">상단 어둡게</button>
+                <button class="btn-s" onclick="setG('g-vignette',this)">비네팅</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">7. Quote Marks (따옴표)</span>
+            <div class="grid-3">
+                <button class="btn-s active" onclick="setQ('none',this)">없음</button>
+                <button class="btn-s" onclick="setQ('inline',this)">"인라인"</button>
+                <button class="btn-s" onclick="setQ('big',this)">❝장식❞</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">7-1. "대사" 강조 (큰따옴표 자동)</span>
+            <div class="grid-2">
+                <button class="btn-s active" onclick="setEm('none',this)">없음</button>
+                <button class="btn-s" onclick="setEm('color',this)">색상</button>
+                <button class="btn-s" onclick="setEm('bold',this)">굵게</button>
+                <button class="btn-s" onclick="setEm('both',this)">색상+굵게</button>
+            </div>
+            <span class="label" style="font-size:8px; color:#bbb; margin-top:6px">색상 선택</span>
+            <div class="color-grid">
+                <div class="color-dot active" style="background:#f5d97a" onclick="setEmColor('#f5d97a','#8a6d2c',this)" title="베이지"></div>
+                <div class="color-dot" style="background:#ff9a8b" onclick="setEmColor('#ff9a8b','#c0392b',this)" title="코랄"></div>
+                <div class="color-dot" style="background:#a8d8ea" onclick="setEmColor('#a8d8ea','#2c6e87',this)" title="하늘"></div>
+                <div class="color-dot" style="background:#b5e8a8" onclick="setEmColor('#b5e8a8','#3a7a2e',this)" title="연두"></div>
+                <div class="color-dot" style="background:#d4b5e8" onclick="setEmColor('#d4b5e8','#6a3a8a',this)" title="라벤더"></div>
+                <div class="color-dot" style="background:#ffb3d9" onclick="setEmColor('#ffb3d9','#a8266d',this)" title="핑크"></div>
+                <div class="color-dot" style="background:#ffffff" onclick="setEmColor('#ffffff','#000000',this)" title="흰/검정"></div>
+            </div>
+        </div>
+
+        <div class="group">
+            <span class="label">7-2. *서술* 강조 (별표 자동, * 표시 사라짐)</span>
+            <div class="grid-2">
+                <button class="btn-s active" onclick="setSt('none',this)">없음</button>
+                <button class="btn-s" onclick="setSt('italic',this)">이탤릭</button>
+                <button class="btn-s" onclick="setSt('color',this)">색상</button>
+                <button class="btn-s" onclick="setSt('italic-color',this)">이탤릭+색상</button>
+                <button class="btn-s" onclick="setSt('dim',this)">흐리게</button>
+            </div>
+            <span class="label" style="font-size:8px; color:#bbb; margin-top:6px">색상 선택</span>
+            <div class="color-grid">
+                <div class="color-dot active" style="background:#c0c0c0" onclick="setStColor('#c0c0c0','#666666',this)" title="회색"></div>
+                <div class="color-dot" style="background:#f5d97a" onclick="setStColor('#f5d97a','#8a6d2c',this)" title="베이지"></div>
+                <div class="color-dot" style="background:#ff9a8b" onclick="setStColor('#ff9a8b','#c0392b',this)" title="코랄"></div>
+                <div class="color-dot" style="background:#a8d8ea" onclick="setStColor('#a8d8ea','#2c6e87',this)" title="하늘"></div>
+                <div class="color-dot" style="background:#b5e8a8" onclick="setStColor('#b5e8a8','#3a7a2e',this)" title="연두"></div>
+                <div class="color-dot" style="background:#d4b5e8" onclick="setStColor('#d4b5e8','#6a3a8a',this)" title="라벤더"></div>
+                <div class="color-dot" style="background:#ffb3d9" onclick="setStColor('#ffb3d9','#a8266d',this)" title="핑크"></div>
+            </div>
+        </div>
+
+        <div class="group">
             <span class="label">8. Typography</span>
             <div class="grid-2">
                 <button class="btn-s" onclick="setFt('Nanum Myeongjo', this)">나눔명조</button>
                 <button class="btn-s" onclick="setFt('Gowun Batang', this)">고운바탕</button>
-                <button class="btn-s" onclick="setFt('Noto Sans KR', this)">노토산스</button>
-                <button class="btn-s active" onclick="setFt('IBM Plex Sans KR', this)">IBM Plex</button>
+                <button class="btn-s active" onclick="setFt('Noto Sans KR', this)">노토산스</button>
+                <button class="btn-s" onclick="setFt('IBM Plex Sans KR', this)">IBM Plex</button>
                 <button class="btn-s" onclick="setFt('Nanum Gothic', this)">나눔고딕</button>
                 <button class="btn-s" onclick="setFt('Song Myung', this)">송명체</button>
             </div>
@@ -321,27 +406,95 @@
         }
 
         function applyQuoteMode(txt) {
-            // 기존 따옴표 정리 (앞뒤 ", ", ", ❝, ❞ 제거)
+            // 기존 따옴표 정리 (앞뒤 ", ", ", ❝, ❞ 제거) — 인라인/장식 모드용
             let clean = txt.replace(/^["""❝]+/, '').replace(/["""❞]+$/, '').trim();
             
             if (quoteMode === 'inline') {
-                vT.innerHTML = `"${escapeHtml(clean)}"`;
+                vT.innerHTML = `"${highlightQuotes(escapeHtml(clean))}"`;
             } else if (quoteMode === 'big') {
-                vT.innerHTML = `<span class="big-quote-mark bq-open">❝</span>${escapeHtml(clean)}<span class="big-quote-mark bq-close">❞</span>`;
+                vT.innerHTML = `<span class="big-quote-mark bq-open">❝</span>${highlightQuotes(escapeHtml(clean))}<span class="big-quote-mark bq-close">❞</span>`;
             } else {
-                vT.innerText = txt; // 원본 그대로
+                // 원본 그대로 — 단, 큰따옴표 강조는 적용
+                vT.innerHTML = highlightQuotes(escapeHtml(txt));
             }
         }
 
+        // 큰따옴표("..." 또는 "...")로 감싸진 부분을 .quoted span으로 감쌈
+        // *...* 또는 **...**로 감싸진 부분을 .starred span으로 감싸고 별표는 제거
+        function highlightQuotes(s) {
+            // s는 escapeHtml 처리된 상태:
+            //   "  →  &quot;
+            //   *  →  *  (escape에서 건드리지 않음)
+            //   스마트따옴표 ", " → 그대로 (escape 대상 아님)
+            
+            // 1) 별표 처리 먼저 — **...** 우선, 그 다음 *...*
+            s = s.replace(/\*\*([^*\n]+?)\*\*/g, '<span class="starred starred-strong">$1</span>');
+            s = s.replace(/\*([^*\n]+?)\*/g, '<span class="starred">$1</span>');
+            
+            // 2) 큰따옴표 매칭
+            //    &quot;...&quot; (escape된 직선 큰따옴표)
+            s = s.replace(/&quot;([^&]*?)&quot;/g, '<span class="quoted">&quot;$1&quot;</span>');
+            //    스마트 따옴표 "..."
+            s = s.replace(/\u201C([^\u201C\u201D]*?)\u201D/g, '<span class="quoted">\u201C$1\u201D</span>');
+            
+            return s;
+        }
+
+        function setEm(mode, b) {
+            card.classList.remove('em-none', 'em-color', 'em-bold', 'em-both');
+            if (mode !== 'none') card.classList.add('em-' + mode);
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+            b.classList.add('active');
+        }
+
+        function setSt(mode, b) {
+            card.classList.remove('st-italic', 'st-color', 'st-italic-color', 'st-dim');
+            if (mode !== 'none') card.classList.add('st-' + mode);
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+            b.classList.add('active');
+        }
+
+        function setEmColor(light, dark, e) {
+            document.documentElement.style.setProperty('--em-color', light);
+            document.documentElement.style.setProperty('--em-color-dark', dark);
+            e.parentElement.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+            e.classList.add('active');
+        }
+
+        function setStColor(light, dark, e) {
+            document.documentElement.style.setProperty('--st-color', light);
+            document.documentElement.style.setProperty('--st-color-dark', dark);
+            e.parentElement.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+            e.classList.add('active');
+        }
+
         function escapeHtml(s) {
-            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         function setR(r,b) { 
-            const va = card.className.match(/va-\w+/)?.[0] || 'va-center';
-            card.className = r + ' ' + va; 
+            // 비율 변경 시 보존해야 할 클래스들: 세로정렬, 사이즈, 강조(대사/서술), 글자색 모드
+            const preserveClasses = [
+                ...card.classList.values()
+            ].filter(c => 
+                c.startsWith('va-') || 
+                c === 'size-l' || 
+                c.startsWith('em-') || 
+                c.startsWith('st-') || 
+                c === 'text-dark'
+            );
+            card.className = [r, ...preserveClasses].join(' ');
             b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); 
             b.classList.add('active'); 
+        }
+        function setSize(s, b) {
+            if (s === 'l') {
+                card.classList.add('size-l');
+            } else {
+                card.classList.remove('size-l');
+            }
+            b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active'));
+            b.classList.add('active');
         }
         function setSz(v) { vT.style.fontSize = v+'px'; document.getElementById('sz-val').innerText = v; }
         function setLh(v) { vT.style.lineHeight = v; document.getElementById('lh-val').innerText = parseFloat(v).toFixed(2); }
@@ -380,7 +533,14 @@
             b.classList.add('active'); 
             applyQuoteMode(document.getElementById('i-t').value);
         }
-        function setCl(c) { vT.style.color = vI.style.color = c; }
+        function setCl(c) { 
+            vT.style.color = vI.style.color = c; 
+            if (c === '#000') {
+                card.classList.add('text-dark');
+            } else {
+                card.classList.remove('text-dark');
+            }
+        }
         function setAl(a, b) { tB.style.textAlign = a; b.parentElement.querySelectorAll('button').forEach(btn=>btn.classList.remove('active')); b.classList.add('active'); }
         function setVa(va, b) {
             card.classList.remove('va-top', 'va-center', 'va-bottom');
@@ -403,17 +563,67 @@
         }
 
         function save() { 
+            // 3:1 비율은 헤더용이라 S/L 모두 1500x500 정확 출력
+            const isHeader = card.classList.contains('r-3-1');
+            const isLarge = card.classList.contains('size-l');
+            let saveScale = 2;
+            if (isHeader) {
+                saveScale = isLarge ? 2 : 2.5;
+            }
+
+            // ⚠️ html2canvas가 CSS 변수(--em-color 등)를 못 읽는 이슈 대비:
+            // 캡처 직전에 .quoted, .starred span에 인라인 스타일을 강제 적용
+            const emColor = getComputedStyle(document.documentElement).getPropertyValue('--em-color').trim();
+            const emColorDark = getComputedStyle(document.documentElement).getPropertyValue('--em-color-dark').trim();
+            const stColor = getComputedStyle(document.documentElement).getPropertyValue('--st-color').trim();
+            const stColorDark = getComputedStyle(document.documentElement).getPropertyValue('--st-color-dark').trim();
+            const isDarkText = card.classList.contains('text-dark');
+            
+            const quotedSpans = card.querySelectorAll('.quoted');
+            const starredSpans = card.querySelectorAll('.starred');
+            
+            // .quoted (큰따옴표) 강조 색상 인라인화
+            quotedSpans.forEach(el => {
+                if (card.classList.contains('em-color') || card.classList.contains('em-both')) {
+                    el.style.color = isDarkText ? emColorDark : emColor;
+                }
+                if (card.classList.contains('em-bold') || card.classList.contains('em-both')) {
+                    el.style.fontWeight = '700';
+                }
+            });
+            // .starred (별표) 강조 색상/스타일 인라인화
+            starredSpans.forEach(el => {
+                if (card.classList.contains('st-color') || card.classList.contains('st-italic-color')) {
+                    el.style.color = isDarkText ? stColorDark : stColor;
+                }
+                if (card.classList.contains('st-italic') || card.classList.contains('st-italic-color') || card.classList.contains('st-dim')) {
+                    el.style.fontStyle = 'italic';
+                }
+                if (card.classList.contains('st-dim')) {
+                    el.style.opacity = '0.7';
+                }
+            });
+            
             html2canvas(card, {
-                scale: 2,
+                scale: saveScale,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: null,
             }).then(cvs => { 
+                // 캡처 끝나면 인라인 스타일 제거 (CSS 변수 기반으로 다시 작동하도록)
+                quotedSpans.forEach(el => { el.style.color=''; el.style.fontWeight=''; });
+                starredSpans.forEach(el => { el.style.color=''; el.style.fontStyle=''; el.style.opacity=''; });
+                
                 const a = document.createElement('a'); 
                 a.download = genFilename(); 
                 a.href = cvs.toDataURL('image/png'); 
                 a.click(); 
-            }); 
+            }).catch(err => {
+                // 에러 시에도 인라인 스타일 정리
+                quotedSpans.forEach(el => { el.style.color=''; el.style.fontWeight=''; });
+                starredSpans.forEach(el => { el.style.color=''; el.style.fontStyle=''; el.style.opacity=''; });
+                console.error('Save failed:', err);
+            });
         }
 
         // ============ 컬렉션 ============
@@ -430,11 +640,37 @@
 
         function saveCol() {
             const arr = getCol();
+            // 카드의 모든 설정 캡처
+            const settings = {
+                // 카드 클래스 통째로 (비율, 사이즈, 강조, 정렬 모두 포함)
+                cardClass: card.className,
+                // 배경 (이미지 또는 색/그라데이션)
+                bgImage: card.style.backgroundImage || '',
+                bgColor: card.style.backgroundColor || '',
+                bgImageData: lastImgData || '',
+                // 필터/그라데이션 레이어
+                filterClass: fL.className,
+                gradientClass: gL.className,
+                // 텍스트 스타일
+                fontSize: vT.style.fontSize || '',
+                lineHeight: vT.style.lineHeight || '',
+                fontFamily: vT.style.fontFamily || '',
+                textColor: vT.style.color || '',
+                textAlign: tB.style.textAlign || '',
+                // 따옴표 모드
+                quoteMode: quoteMode,
+                // 강조 색상 (CSS 변수)
+                emColor: getComputedStyle(document.documentElement).getPropertyValue('--em-color').trim(),
+                emColorDark: getComputedStyle(document.documentElement).getPropertyValue('--em-color-dark').trim(),
+                stColor: getComputedStyle(document.documentElement).getPropertyValue('--st-color').trim(),
+                stColorDark: getComputedStyle(document.documentElement).getPropertyValue('--st-color-dark').trim(),
+            };
             const item = {
                 id: Date.now(),
                 text: document.getElementById('i-t').value,
                 info: document.getElementById('i-i').value,
-                date: new Date().toISOString().slice(0,10)
+                date: new Date().toISOString().slice(0,10),
+                settings: settings
             };
             arr.unshift(item);
             setCol(arr);
@@ -445,10 +681,67 @@
             const arr = getCol();
             const item = arr.find(x => x.id === id);
             if (!item) return;
+            
+            // 텍스트
             document.getElementById('i-t').value = item.text;
             document.getElementById('i-i').value = item.info;
+            
+            // 설정 복원 (구버전 항목은 settings 없을 수 있음)
+            if (item.settings) {
+                const s = item.settings;
+                if (s.cardClass) card.className = s.cardClass;
+                if (s.bgImage) card.style.backgroundImage = s.bgImage;
+                if (s.bgColor) card.style.backgroundColor = s.bgColor;
+                if (s.bgImageData) {
+                    lastImgData = s.bgImageData;
+                    document.getElementById('re-apply').style.display = 'inline-block';
+                }
+                if (s.filterClass) fL.className = s.filterClass;
+                if (s.gradientClass) gL.className = s.gradientClass;
+                if (s.fontSize) {
+                    vT.style.fontSize = s.fontSize;
+                    const sz = parseInt(s.fontSize);
+                    if (sz) {
+                        document.getElementById('sz-range').value = sz;
+                        document.getElementById('sz-val').innerText = sz;
+                    }
+                }
+                if (s.lineHeight) {
+                    vT.style.lineHeight = s.lineHeight;
+                    document.getElementById('lh-range').value = s.lineHeight;
+                    document.getElementById('lh-val').innerText = parseFloat(s.lineHeight).toFixed(2);
+                }
+                if (s.fontFamily) vT.style.fontFamily = s.fontFamily;
+                if (s.textColor) { vT.style.color = s.textColor; vI.style.color = s.textColor; }
+                if (s.textAlign) tB.style.textAlign = s.textAlign;
+                if (s.quoteMode) quoteMode = s.quoteMode;
+                if (s.emColor) document.documentElement.style.setProperty('--em-color', s.emColor);
+                if (s.emColorDark) document.documentElement.style.setProperty('--em-color-dark', s.emColorDark);
+                if (s.stColor) document.documentElement.style.setProperty('--st-color', s.stColor);
+                if (s.stColorDark) document.documentElement.style.setProperty('--st-color-dark', s.stColorDark);
+                
+                // 사이드바 active 상태도 동기화 — 카드 클래스 기준으로 자동 갱신
+                syncSidebarFromCard();
+            }
+            
             up();
             closeCol();
+        }
+
+        // 카드 상태에 맞춰 사이드바 active 버튼 갱신
+        function syncSidebarFromCard() {
+            // 비율 버튼
+            const ratioMatch = card.className.match(/r-[\d-]+/);
+            if (ratioMatch) {
+                document.querySelectorAll('button[onclick^="setR"]').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${ratioMatch[0]}'`));
+                });
+            }
+            // 사이즈 S/L
+            const isLarge = card.classList.contains('size-l');
+            document.getElementById('size-s-btn').classList.toggle('active', !isLarge);
+            document.getElementById('size-l-btn').classList.toggle('active', isLarge);
+            // 정렬 (가로/세로)는 클래스로만 판단 — 가로는 inline style이라 따로 처리 안 함
         }
 
         function delColItem(e, id) {
